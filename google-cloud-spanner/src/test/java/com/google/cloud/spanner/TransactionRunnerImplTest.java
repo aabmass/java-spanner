@@ -59,6 +59,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.protobuf.ProtoUtils;
 import io.opencensus.trace.Span;
+import io.opencensus.trace.Tracer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
@@ -119,7 +120,7 @@ public class TransactionRunnerImplTest {
               }
               return builder.build();
             });
-    transactionRunner = new TransactionRunnerImpl(session);
+    transactionRunner = new TransactionRunnerImpl(session, mock(Tracer.class));
     when(rpc.commitAsync(Mockito.any(CommitRequest.class), Mockito.anyMap()))
         .thenReturn(
             ApiFutures.immediateFuture(
@@ -288,7 +289,7 @@ public class TransactionRunnerImplTest {
           }
         };
     session.setCurrentSpan(mock(Span.class));
-    TransactionRunnerImpl runner = new TransactionRunnerImpl(session);
+    TransactionRunnerImpl runner = new TransactionRunnerImpl(session, mock(Tracer.class));
     runner.setSpan(mock(Span.class));
     assertThat(usedInlinedBegin).isFalse();
     runner.run(
@@ -319,7 +320,7 @@ public class TransactionRunnerImplTest {
         .thenReturn(
             ApiFutures.immediateFuture(ByteString.copyFromUtf8(UUID.randomUUID().toString())));
     when(session.getName()).thenReturn(SessionId.of("p", "i", "d", "test").getName());
-    TransactionRunnerImpl runner = new TransactionRunnerImpl(session);
+    TransactionRunnerImpl runner = new TransactionRunnerImpl(session, mock(Tracer.class));
     runner.setSpan(mock(Span.class));
     ExecuteBatchDmlResponse response1 =
         ExecuteBatchDmlResponse.newBuilder()

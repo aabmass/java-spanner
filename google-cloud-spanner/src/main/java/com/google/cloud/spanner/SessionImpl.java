@@ -43,7 +43,6 @@ import com.google.spanner.v1.TransactionOptions;
 import io.opencensus.common.Scope;
 import io.opencensus.trace.Span;
 import io.opencensus.trace.Tracer;
-import io.opencensus.trace.Tracing;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -56,8 +55,6 @@ import javax.annotation.Nullable;
  * users need not be aware of the actual session management, pooling and handling.
  */
 class SessionImpl implements Session {
-  private static final Tracer tracer = Tracing.getTracer();
-
   /** Keep track of running transactions on this session per thread. */
   static final ThreadLocal<Boolean> hasPendingTransaction = ThreadLocal.withInitial(() -> false);
 
@@ -91,6 +88,7 @@ class SessionImpl implements Session {
   private final SpannerImpl spanner;
   private final String name;
   private final DatabaseId databaseId;
+  private final Tracer tracer;
   private SessionTransaction activeTransaction;
   ByteString readyTransactionId;
   private final Map<SpannerRpc.Option, ?> options;
@@ -101,6 +99,7 @@ class SessionImpl implements Session {
     this.options = options;
     this.name = checkNotNull(name);
     this.databaseId = SessionId.of(name).getDatabaseId();
+    this.tracer = spanner.tracer;
   }
 
   @Override
@@ -254,22 +253,22 @@ class SessionImpl implements Session {
 
   @Override
   public TransactionRunner readWriteTransaction(TransactionOption... options) {
-    return setActive(new TransactionRunnerImpl(this, options));
+    return setActive(new TransactionRunnerImpl(this, tracer, options));
   }
 
   @Override
   public AsyncRunner runAsync(TransactionOption... options) {
-    return new AsyncRunnerImpl(setActive(new TransactionRunnerImpl(this, options)));
+    return new AsyncRunnerImpl(setActive(new TransactionRunnerImpl(this, tracer, options)));
   }
 
   @Override
   public TransactionManager transactionManager(TransactionOption... options) {
-    return new TransactionManagerImpl(this, currentSpan, options);
+    return new TransactionManagerImpl(this, currentSpan, tracer, options);
   }
 
   @Override
   public AsyncTransactionManagerImpl transactionManagerAsync(TransactionOption... options) {
-    return new AsyncTransactionManagerImpl(this, currentSpan, options);
+    return new AsyncTransactionManagerImpl(this, currentSpan, tracer, options);
   }
 
   @Override
