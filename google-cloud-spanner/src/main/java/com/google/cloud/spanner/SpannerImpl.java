@@ -95,7 +95,7 @@ class SpannerImpl extends BaseService<SpannerOptions> implements Spanner {
 
   private final DatabaseAdminClient dbAdminClient;
   private final InstanceAdminClient instanceClient;
-  final Tracer tracer;
+  private final Tracer tracer;
 
   /**
    * Exception class used to track the stack trace at the point when a Spanner instance is closed.
@@ -135,6 +135,10 @@ class SpannerImpl extends BaseService<SpannerOptions> implements Spanner {
   /** Returns the {@link SpannerRpc} of this {@link SpannerImpl} instance. */
   SpannerRpc getRpc() {
     return gapicRpc;
+  }
+
+  public Tracer getTracer() {
+    return tracer;
   }
 
   /** Returns the default setting for prefetchChunks of this {@link SpannerImpl} instance. */
@@ -231,7 +235,7 @@ class SpannerImpl extends BaseService<SpannerOptions> implements Spanner {
 
   @VisibleForTesting
   DatabaseClientImpl createDatabaseClient(String clientId, SessionPool pool) {
-    return new DatabaseClientImpl(clientId, pool, tracer);
+    return new DatabaseClientImpl(clientId, pool, getTracer());
   }
 
   @Override

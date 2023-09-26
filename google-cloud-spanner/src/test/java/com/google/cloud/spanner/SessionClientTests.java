@@ -27,6 +27,9 @@ import com.google.cloud.grpc.GrpcTransportOptions.ExecutorFactory;
 import com.google.cloud.spanner.SessionClient.SessionConsumer;
 import com.google.cloud.spanner.spi.v1.SpannerRpc;
 import com.google.cloud.spanner.spi.v1.SpannerRpc.Option;
+
+import io.opencensus.trace.Tracer;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -110,6 +113,7 @@ public class SessionClientTests {
     when(spannerOptions.getClock()).thenReturn(NanoClock.getDefaultClock());
     when(spanner.getOptions()).thenReturn(spannerOptions);
     when(spanner.getRpc()).thenReturn(rpc);
+    when(spanner.getTracer()).thenReturn(mock(Tracer.class));
   }
 
   @Test

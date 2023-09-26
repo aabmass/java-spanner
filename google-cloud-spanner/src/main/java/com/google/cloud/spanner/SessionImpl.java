@@ -99,7 +99,7 @@ class SessionImpl implements Session {
     this.options = options;
     this.name = checkNotNull(name);
     this.databaseId = SessionId.of(name).getDatabaseId();
-    this.tracer = spanner.tracer;
+    this.tracer = spanner.getTracer();
   }
 
   @Override

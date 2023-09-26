@@ -207,8 +207,8 @@ class SessionClient implements AutoCloseable {
     synchronized (this) {
       options = optionMap(SessionOption.channelHint(sessionChannelCounter++));
     }
-    Span span = spanner.tracer.spanBuilder(SpannerImpl.CREATE_SESSION).startSpan();
-    try (Scope s = spanner.tracer.withSpan(span)) {
+    Span span = spanner.getTracer().spanBuilder(SpannerImpl.CREATE_SESSION).startSpan();
+    try (Scope s = spanner.getTracer().withSpan(span)) {
       com.google.spanner.v1.Session session =
           spanner
               .getRpc()
@@ -271,7 +271,7 @@ class SessionClient implements AutoCloseable {
           try {
             executor.submit(
                 new BatchCreateSessionsRunnable(
-                    createCountForChannel, sessionChannelCounter++, consumer, spanner.tracer));
+                    createCountForChannel, sessionChannelCounter++, consumer, spanner.getTracer()));
             numBeingCreated += createCountForChannel;
           } catch (Throwable t) {
             consumer.onSessionCreateFailure(t, sessionCount - numBeingCreated);
@@ -291,14 +291,14 @@ class SessionClient implements AutoCloseable {
   private List<SessionImpl> internalBatchCreateSessions(
       final int sessionCount, final long channelHint) throws SpannerException {
     final Map<SpannerRpc.Option, ?> options = optionMap(SessionOption.channelHint(channelHint));
-    Span parent = spanner.tracer.getCurrentSpan();
+    Span parent = spanner.getTracer().getCurrentSpan();
     Span span =
         spanner
-            .tracer
+            .getTracer()
             .spanBuilderWithExplicitParent(SpannerImpl.BATCH_CREATE_SESSIONS_REQUEST, parent)
             .startSpan();
     span.addAnnotation(String.format("Requesting %d sessions", sessionCount));
-    try (Scope s = spanner.tracer.withSpan(span)) {
+    try (Scope s = spanner.getTracer().withSpan(span)) {
       List<com.google.spanner.v1.Session> sessions =
           spanner
               .getRpc()
